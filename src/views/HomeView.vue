@@ -7,7 +7,8 @@
       <div class="test-picker-row">
         <div class="test-picker-item" id="two-items">2 items</div>
       </div>
-      <div class="next-button test-picker-item">Next</div>
+      <div class="next-button test-picker-item">Return Home</div>
+      <div class="disclaimer-text">(This site does not work on mobile)</div>
     </div>
   </div>
 </template>
@@ -19,10 +20,10 @@ import { onMounted } from 'vue';
 onMounted(() => {
   var attemptCount = 0;
   var timesArray = [];
-  var correctKey;
-  var startTime;
-  var stopTime;
-  var gameType;
+  var correctKey = "";
+  var startTime = 0;
+  var stopTime = 0;
+  var gameType = "";
 
   const twoItemsButton = document.getElementById("two-items");
 
@@ -36,9 +37,12 @@ onMounted(() => {
   });
 
   function twoItems() {
+    startTime = 0;
+    stopTime = 0;
     document.querySelector(".game-title").innerHTML = "Wait...";
     document.querySelector(".game-desc").style.display = "none";
     document.querySelector(".test-picker-row").style.display = "none";
+    document.querySelector(".disclaimer-text").style.display = "none";
 
     document.removeEventListener("keydown", resultsScreen);
     document.removeEventListener("keydown", twoItems);
@@ -47,7 +51,7 @@ onMounted(() => {
   }
 
   async function randomize() {
-    const sleepTime = Math.random() * (8000 - 3000) + 3000;
+    const sleepTime = Math.random() * (7000 - 3000) + 3000;
 
     await new Promise(r => setTimeout(r, sleepTime));
     changeScreen();
@@ -77,6 +81,8 @@ onMounted(() => {
   function checkKeyPress(e) {
     if(e.key == correctKey) {
       stopTimer();
+    } else {
+      fail();
     }
   }
 
@@ -99,6 +105,18 @@ onMounted(() => {
 
     resetGame();
   }
+  
+  function fail() {
+    document.removeEventListener("keypress", checkKeyPress);
+
+    document.querySelector(".game-desc").style.display = "grid";
+
+    document.querySelector(".game-title").innerHTML = "Wrong button!";
+    document.querySelector(".game-desc").innerHTML = "Press any button to retry.";
+    document.querySelector(".reaction-background").style.backgroundColor = "#419ad5";
+
+    document.addEventListener("keydown", twoItems);
+  }
 
   function resetGame() {
     document.querySelector(".game-desc").style.display = "grid";
@@ -112,6 +130,8 @@ onMounted(() => {
   }
 
   function resultsScreen() {
+    document.removeEventListener("keydown", resultsScreen);
+
     const sum = timesArray.reduce(
       (accumulator, currentValue) => accumulator + currentValue,
       0,
@@ -119,7 +139,22 @@ onMounted(() => {
 
     const average = sum / 5;
 
-    document.querySelector(".game-title").innerHTML = average.toString() + "ms";
+    document.querySelector(".game-title").innerHTML = Math.round(average).toString() + "ms";
+    document.querySelector(".game-desc").innerHTML = "Congrats! Share it with your friends!";
+    document.querySelector(".next-button").style.display = "flex";
+
+    document.querySelector(".next-button").addEventListener("click", resetSite);
+  }
+
+  function resetSite() {
+    attemptCount = 0;
+    timesArray = [];
+    document.querySelector(".game-title").innerHTML = "Mental Stack Reaction Time Test Extravaganza";
+    document.querySelector(".game-desc").style.display = "flex";
+    document.querySelector(".game-desc").innerHTML = "Hover over a button to view the rules of the game";
+    document.querySelector(".test-picker-row").style.display = "flex";
+    document.querySelector(".disclaimer-text").style.display = "flex";
+    document.querySelector(".next-button").style.display = "none";
   }
 
 })
@@ -128,7 +163,7 @@ onMounted(() => {
 
 <style>
 body {
-  font-family: Raleway;
+  font-family: Arial, Helvetica, sans-serif;
   overflow: hidden;
   margin: 0 0 0 0;
 }
@@ -152,7 +187,7 @@ body {
 }
 
 .game-title {
-  font-family: Raleway Bold;
+  font-weight: bold;
   color: #fff;
   font-size: 6vw;
   line-height: 7vw;
@@ -187,6 +222,12 @@ body {
 
 .next-button {
   display: none;
+  font-size: 15px;
+}
+
+.disclaimer-text {
+  color: #fff;
+  font-size: 20px;
 }
 
 </style>

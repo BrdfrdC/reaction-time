@@ -7,6 +7,11 @@
       <div class="options-picker-row">
         <div class="test-picker-row">
           <div class="test-picker-item" id="two-items">2 items</div>
+          <div class="test-picker-item" id="four-items">4 items</div>
+        </div>
+        <div class="test-picker-row">
+          <div class="disclaimer-text">Number of Attempts</div>
+          <input type="number" class="game-counter" name="game-counter" min="1" value="5">
         </div>
         <div class="unit-picker-row">
           <div class="disclaimer-text">Miliseconds</div>
@@ -35,31 +40,37 @@ onMounted(() => {
   var stopTime = 0;
   var gameType = "";
   var timeUnits = "milisecs";
+  var gameTimeout;
+  var gameCount;
 
   const twoItemsButton = document.getElementById("two-items");
+  const fourItemsButton = document.getElementById("four-items");
 
   twoItemsButton.addEventListener("mouseover", function (e) {
     document.querySelector(".game-desc").innerHTML = "When the blue screen turns green, press F. When it turns red, press J.";
   });
 
-  twoItemsButton.addEventListener("click", function (e) {
-    gameType = "twoItems";
-    gameStart(gameType);
+  fourItemsButton.addEventListener("mouseover", function (e) {
+    document.querySelector(".game-desc").innerHTML = "When the screen turns purple, green, red, or orange, press D, F, J, or K respectively.";
   });
 
-  function gameStart(gameType) {
+  twoItemsButton.addEventListener("click", function (e) {
+    gameType = "twoItems";
+    gameStart();
+  });
+
+  fourItemsButton.addEventListener("click", function (e) {
+    gameType = "fourItems";
+    gameStart();
+  });
+
+  function gameStart() {
     if(document.querySelector('.unit-checkbox').checked) {
       timeUnits = "frames"
     }
 
-    switch (gameType) {
-      case "twoItems":
-        twoItems();
-        break;
-    }
-  }
+    gameCount = document.querySelector(".game-counter").value;
 
-  function twoItems() {
     startTime = 0;
     stopTime = 0;
 
@@ -69,34 +80,34 @@ onMounted(() => {
     document.querySelector(".disclaimer-text").style.display = "none";
 
     document.removeEventListener("keydown", resultsScreen);
-    document.removeEventListener("keydown", twoItems);
+    document.removeEventListener("keydown", gameStart);
     
     randomize();
   }
 
   async function randomize() {
-    const sleepTime = Math.random() * (4000 - 3000) + 3000;
-    const gameTimeout = setTimeout(changeScreen, sleepTime);
+    const sleepTime = Math.random() * (5000 - 3000) + 3000;
+    gameTimeout = setTimeout(changeScreen, sleepTime);
 
-    document.addEventListener("keydown", function(e) {
-      early(gameTimeout);
-    });
+    document.addEventListener("keydown", early);
   }
 
-  function early(timeout) {
-    clearTimeout(timeout);
+  function early() {
+    clearTimeout(gameTimeout);
     document.removeEventListener("keydown", early);
 
     document.querySelector(".game-title").innerHTML = "Too Early!";
     document.querySelector(".game-desc").style.display = "flex";
     document.querySelector(".game-desc").innerHTML = "Wait until the screen changes before pressing a button. Press any button to restart.";
-    document.addEventListener("keydown", twoItems);
+
+    document.addEventListener("keydown", gameStart);
   }
 
   function changeScreen() {
+    var itemPicked;
     switch (gameType) {
       case "twoItems":
-        const itemPicked = (Math.floor(Math.random() * 2) == 0);
+        itemPicked = (Math.floor(Math.random() * 2) == 0);
 
         if (itemPicked) {
           document.querySelector(".reaction-background").style.backgroundColor = "green";
@@ -106,6 +117,36 @@ onMounted(() => {
           document.querySelector(".reaction-background").style.backgroundColor = "red";
           document.querySelector(".game-title").innerHTML = "Press J!";
           correctKey = "j";
+        }
+
+        startTimer();
+        document.addEventListener("keypress", checkKeyPress);
+        break;
+      
+      case "fourItems":
+        itemPicked = (Math.floor(Math.random() * 4));
+        
+        switch (itemPicked) {
+          case 0:
+            document.querySelector(".reaction-background").style.backgroundColor = "purple";
+            document.querySelector(".game-title").innerHTML = "Press D!";
+            correctKey = "d";
+            break;
+          case 1:
+            document.querySelector(".reaction-background").style.backgroundColor = "green";
+            document.querySelector(".game-title").innerHTML = "Press F!";
+            correctKey = "f";
+            break;
+          case 2:
+            document.querySelector(".reaction-background").style.backgroundColor = "red";
+            document.querySelector(".game-title").innerHTML = "Press J!";
+            correctKey = "j";
+            break;
+          case 3:
+            document.querySelector(".reaction-background").style.backgroundColor = "orange";
+            document.querySelector(".game-title").innerHTML = "Press K!";
+            correctKey = "k";
+            break;
         }
 
         startTimer();
@@ -128,7 +169,7 @@ onMounted(() => {
 
   function stopTimer() {
     document.removeEventListener("keypress", checkKeyPress);
-    document.removeEventListener("keydown", twoItems);
+    document.removeEventListener("keydown", gameStart);
 
     stopTime = Date.now().toString();
     const reactionTime = (stopTime - startTime);
@@ -151,17 +192,17 @@ onMounted(() => {
     document.querySelector(".game-desc").innerHTML = "Press any button to retry.";
     document.querySelector(".reaction-background").style.backgroundColor = "#419ad5";
 
-    document.addEventListener("keydown", twoItems);
+    document.addEventListener("keydown", gameStart);
   }
 
   function resetGame() {
     document.querySelector(".game-desc").style.display = "grid";
-    if (attemptCount >= 5) {
+    if (attemptCount >= gameCount) {
       document.querySelector(".game-desc").innerHTML = "Press any button to see results.";
       document.addEventListener("keydown", resultsScreen);
     } else {
       document.querySelector(".game-desc").innerHTML = "Press any button to continue.";
-      document.addEventListener("keydown", twoItems);
+      document.addEventListener("keydown", gameStart);
     }
   }
 
@@ -173,12 +214,12 @@ onMounted(() => {
       0,
     );
 
-    const average = sum / 5;
+    const average = sum / gameCount;
 
     if (timeUnits == "milisecs") {
       document.querySelector(".game-title").innerHTML = Math.round(average).toString() + "ms";
     } else if (timeUnits == "frames") {
-      document.querySelector(".game-title").innerHTML = Math.round(average / (1000/ 60)).toString() + "frames";
+      document.querySelector(".game-title").innerHTML = Math.round(average / (1000/ 60)).toString() + " frames";
     }
 
     
@@ -254,16 +295,25 @@ body {
   flex-direction: row;
   align-items: center;
   margin-bottom: 20px;
+  width: 20vw;
+  justify-content: space-around;
+}
+
+.game-counter {
+  background-color: transparent;
+  color: white;
+  border-color: rgb(247, 224, 19);
+  width: 80px;
+  height: 20px;
+  font-size: 15px;
+  border-radius: 7px;
 }
 
 .unit-picker-row {
   position: relative;
-  left: -1%;
   display: flex;
   flex-direction: row;
   align-items: center;
-  width: 15vw;
-  justify-content: space-around;
   margin-bottom: 20px;
 }
 
@@ -286,6 +336,7 @@ body {
   display: inline-block;
   width: 60px;
   height: 34px;
+  margin: 0px 20px;
 }
 
 .unit-switch input { 
@@ -323,11 +374,7 @@ body {
 }
 
 input:checked + .slider {
-  background-color: rgb(247, 224, 19);
-}
-
-input:focus + .slider {
-  box-shadow: 0 0 1px rgb(247, 224, 19);
+  background-color: #ccc;
 }
 
 input:checked + .slider:before {

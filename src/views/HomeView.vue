@@ -175,7 +175,12 @@ onMounted(() => {
     const reactionTime = (stopTime - startTime);
 
     document.querySelector(".reaction-background").style.backgroundColor = "#419ad5";
-    document.querySelector(".game-title").innerHTML = reactionTime.toString() + "ms";
+    
+    if (timeUnits == "milisecs") {
+      document.querySelector(".game-title").innerHTML = Math.round(reactionTime).toString() + "ms";
+    } else if (timeUnits == "frames") {
+      document.querySelector(".game-title").innerHTML = Math.round(reactionTime / (1000/ 60)).toString() + " frames";
+    }
 
     timesArray.push(reactionTime);
     attemptCount++;
@@ -318,10 +323,8 @@ body {
 }
 
 .test-picker-item {
-  width: 7vw;
-  height: 5vh;
-  max-width: 120px;
-  max-height: 50px;
+  width: 120px;
+  height: 50px;
   border-radius: 15px;
   display: flex;
   align-items: center;

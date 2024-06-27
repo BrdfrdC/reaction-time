@@ -312,6 +312,18 @@ body {
   height: 20px;
   font-size: 15px;
   border-radius: 7px;
+  border-style: solid;
+}
+
+input[type="number"] {
+  -webkit-appearance: textfield;
+     -moz-appearance: textfield;
+          appearance: textfield;
+}
+
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none;
 }
 
 .unit-picker-row {
